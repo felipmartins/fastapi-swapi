@@ -1,5 +1,4 @@
 import json
-
 from sqlmodel import SQLModel, create_engine
 from .model import Planet
 
@@ -12,10 +11,6 @@ engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
-
-
-def populate_all_tables(session):
-    populate_table_planets(session)
 
 
 def populate_table_planets(session):
@@ -38,3 +33,7 @@ def populate_table_planets(session):
 
         session.add(planet)
         session.commit()
+
+
+def populate_all_tables(session):
+    populate_table_planets(session)

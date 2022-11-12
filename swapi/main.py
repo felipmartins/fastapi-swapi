@@ -1,22 +1,20 @@
 import os
-
 from fastapi import FastAPI
 from sqlmodel import Session, select
-from .db import create_db_and_tables, engine, populate_all_tables
-
+from .db import create_db_and_tables, engine, populate_all_tables, sqlite_file_name
 from swapi.model import Planet
+
 
 app = FastAPI()
 
-
 @app.on_event("startup")
 def on_startup():
-    if not os.path.exists("database.sqlite"):
+    if not os.path.exists(sqlite_file_name):
         create_db_and_tables()
         with Session(engine) as session:
             populate_all_tables(session)
     else:
-        create_db_and_tables
+        create_db_and_tables()
 
 
 def create_response(result):

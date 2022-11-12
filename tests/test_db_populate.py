@@ -1,13 +1,9 @@
 import json
-
+import pytest
+from unittest.mock import patch, mock_open
 from sqlmodel import create_engine, Session, SQLModel, select
 from sqlmodel.pool import StaticPool
 from swapi.db import populate_table_planets
-
-from unittest.mock import patch, mock_open
-
-import pytest
-
 from swapi.model import Planet
 
 
@@ -19,7 +15,7 @@ def engine_fixture():
         poolclass=StaticPool,
     )
     SQLModel.metadata.create_all(engine)
-
+    
     return engine
 
 
