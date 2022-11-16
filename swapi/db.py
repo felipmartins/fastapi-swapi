@@ -1,6 +1,6 @@
 import json
 from sqlmodel import SQLModel, create_engine
-from .model import Planet
+from .model import Planet, People
 
 sqlite_file_name = "database.sqlite"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -35,5 +35,28 @@ def populate_table_planets(session):
         session.commit()
 
 
+def populate_table_people(session):
+    with open("data/people.json") as file:
+        people = json.load(file)
+
+    for each_person in people:
+        person = People(
+            id=each_person["id"],
+            name=each_person["name"],
+            height=each_person["height"],
+            mass=each_person["mass"],
+            hair_color=each_person["hair_color"],
+            skin_color=each_person["skin_color"],
+            eye_color=each_person["eye_color"],
+            birth_year=each_person["birth_year"],
+            gender=each_person["gender"],
+            planet_id=each_person["planet_id"],
+        )
+
+        session.add(person)
+        session.commit()
+
+
 def populate_all_tables(session):
     populate_table_planets(session)
+    populate_table_people(session)
