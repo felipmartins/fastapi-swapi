@@ -63,6 +63,15 @@ def test_get_planets_route():
         assert data["count"] == 60
 
 
+def test_post_planet_route(single_planet_mock):
+    with patch("swapi.main.get_session", get_session_override):
+
+        res = client.post("/api/planets/", json=single_planet_mock)
+        assert res.status_code == 201
+        data = res.json()
+        assert data["id"] == 61
+
+
 def test_planet_search_route_with_no_query():
 
     with patch("swapi.main.get_session", get_session_override):
@@ -110,15 +119,6 @@ def test_get_planet_by_id_route():
         assert res.status_code == 200
         data = res.json()
         assert data["id"] == 1
-
-
-def test_post_planet_route(single_planet_mock):
-    with patch("swapi.main.get_session", get_session_override):
-
-        res = client.post("/api/planets/", json=single_planet_mock)
-        assert res.status_code == 201
-        data = res.json()
-        assert data["id"] == 61
 
 
 def test_get_people_route():

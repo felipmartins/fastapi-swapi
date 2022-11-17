@@ -3,10 +3,22 @@ from fastapi import FastAPI, Depends
 from sqlmodel import Session, select
 from .db import create_db_and_tables, engine, populate_all_tables, sqlite_file_name
 from swapi.model import Planet, PlanetCreate, PlanetRead, People, PeopleCreate, PeopleRead
-
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
