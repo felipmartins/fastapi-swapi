@@ -4,3 +4,4 @@ black
 pytest
 pytest-cov
 uvicorn
+requests

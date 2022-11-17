@@ -2,6 +2,10 @@
 
 # O que foi feito até agora:
 
+
+[Link para o código da parte 2](https://github.com/tryber/sd-019-a-live-lectures/tree/mentoria/cs/python-na-web/parte-2)
+
+
 Iniciar o momento com a revisão da proposta do momento _Python na Web_, mostrando a API que é consumida no projeto _Star Wars Planet Search_ que foi construída em _Django_, é importante ressaltar a estrutura da API mostrando o que se é esperado da requisição e que vamos construir uma estrutura similar utiliando o _FASTAPI_, além disso, é importante fazer a revisão do código que já foi preparado até o momento.
 
 ```shell
@@ -46,3 +50,139 @@ Por fim, é escrita a função que implementa a rota ```GET``` que lista todos o
 
 ## Início da parte 3:
 
+Para começar a mentoria faremos a adição de algumas dependências ao arquivo ```dev-requirements.txt```. Serão adicionadas duas novas linhas: ```pytest-cov``` e ```requests```. Essas linhas são adicionadas para que possamos testar com melhor qualidade as funções que estamos escrevendo.
+
+Inicialmente, vamos mostrar o comando que é usado para rodar os testes com a nova dependência instalada e ler o relatório que é colocado no terminal, neste relatório é possível visualizar as linhas que estão e não estão sendo testadas.
+
+```shell
+python3 -m pytest --cov-report term-missing --cov=swapi tests/
+```
+
+Será observado que o arquivo ```main.py``` não está sendo testado, por essa razão, o primeiro ponto a ser implementado aqui será o teste da rota que foi criada, embora que, para escrever esse teste, será necessária uma refatoração do código, isso porque, para os testes, será utilizado um banco em memória mockado.
+
+A refatoração consiste em implementar uma função ```get_session()```dentro do arquivo ```main.py``` que retorna a própria sessão recebendo como parâmetro uma engine. Isso irá nos permitir mockar essa sessão, podendo assim, encaminhar as ações do teste para uma sessão mockada que serão direcionadas ao banco que está em memória e não o banco da aplicação de fato. Essa refatoração fará com que a função ```list_planets``` na abertura do contexto da sessão. Veja só:
+
+```python
+def get_session():
+    return Session(engine)
+
+
+@app.get("/api/planets/", tags=["planets"])
+async def list_planets():
+    with get_session() as session:
+        planets = session.exec(select(Planet)).all()
+
+        return create_response(planets)
+```
+
+Feito isso, podemos começar a escrever nosso teste em um novo arquivo, como vamos testar o arquivo ```main.py```, podemos nomear o arquivo de teste como ```test_main.py```. Por enquanto, escreveremos duas funções neste arquivo, a primeira é aquela que retorna a sessão mockada que direciona para o arquivo do banco em memória, a segunda é a função do teste em si. Além disso, é importante fazer as devidas importações e apresentar o ```TestClient``` que o ```FASTAPI``` traz para realizar os testes da aplicação. O código fica assim:
+
+```python
+from sqlmodel import create_engine, Session, SQLModel
+from sqlmodel.pool import StaticPool
+from unittest.mock import patch
+from swapi.main import app
+from fastapi.testclient import TestClient
+from swapi.db import populate_all_tables
+
+client = TestClient(app)
+
+def get_session_override():
+
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(engine)
+    session = Session(engine)
+    populate_all_tables(session)
+
+    return session
+
+
+def test_get_planets_route():
+
+    with patch("swapi.main.get_session", get_session_override):
+
+        res = client.get("/api/planets/")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["count"] == 60
+```
+
+Isso já fará com que a nossa cobertura de testes aumente consideravalmente, ainda faltaram alguns trechos de código de serem testados, mas sem grandes preocupações quanto a isso. Agora, iremos escrever nossa primeira rota ```POST```que faz a criação de um planeta, no entanto, agora, começaremos pelo teste. No mesmo arquivo anterior, escreveremos uma nova função que usará de uma nova fixture que representa o mock de um planeta a ser inserido. O resultado final desse teste fica assim:
+
+```python
+import pytest
+
+@pytest.fixture
+def single_planet_mock():
+    return {
+            "name": "new_planet",
+            "rotation_period": "14",
+            "orbital_period": "34",
+            "diameter": "1045",
+            "climate": "tropic",
+            "gravity": "1 standard",
+            "terrain": "planains",
+            "surface_water": "1",
+            "population": "50000",
+            }
+
+def test_post_planet_route(single_planet_mock):
+    with patch("swapi.main.get_session", get_session_override):
+
+        res = client.post("/api/planets/", json=single_planet_mock)
+        assert res.status_code == 201
+        data = res.json()
+        assert data["id"] == 61
+```
+
+Logo em seguida podemos implementar a rota de fato, a diante, será realizada alguma refatoração nesse arquivo para adequadar o modelo, mas por enquanto o arquivo fica assim:
+
+```python
+@app.post("/api/planets/",  tags=["planets"], status_code=201)
+async def create_planet(planet: Planet):
+    with get_session() as session:    
+        session.add(planet)
+        session.commit()
+        session.refresh(planet)
+        return planet
+```
+
+Agora, é importante criar a motivação que nos levará para a refatoração, para isso, na rota da documentação da API, iremos testar a a rota criada. Veremos que no corpo da requisição é passado um ```ìd```, mas que se enviarmos a requisição sem esse campo, funciona normalmente. Faremos então uma refatoração nos nossos modelos que, em seguida, implicará em uma refatoração na rota ```POST```. Veja:
+
+```python
+class PlanetBase(SQLModel):
+    name: str = Field(max_length=100)
+    rotation_period: str = Field(max_length=50)
+    orbital_period: str = Field(max_length=50)
+    diameter: str = Field(max_length=50)
+    climate: str = Field(max_length=50)
+    gravity: str = Field(max_length=50)
+    terrain: str = Field(max_length=50)
+    surface_water: str = Field(max_length=50)
+    population: str = Field(max_length=50)
+    residents: List["People"] = Relationship(back_populates="homeworld")
+
+class Planet(PlanetBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+class PlanetCreate(PlanetBase):
+    pass
+
+class PlanetRead(PlanetBase):
+    id: int
+```
+----
+```python
+@app.post("/api/planets/",  tags=["planets"], status_code=201)
+async def create_planet(planet: PlanetCreate):
+    with get_session() as session:    
+        db_planet = Planet.from_orm(planet)
+        session.add(db_planet)
+        session.commit()
+        session.refresh(db_planet)
+        return db_planet
+```

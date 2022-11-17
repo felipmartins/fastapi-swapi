@@ -1,4 +1,4 @@
-from sqlmodel import create_engine, Session, SQLModel, select
+from sqlmodel import create_engine, Session, SQLModel
 from sqlmodel.pool import StaticPool
 from unittest.mock import patch
 from swapi.main import app
