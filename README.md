@@ -221,6 +221,19 @@ async def search_planets(name: str = None, gravity: str = None):
         return create_response(planets)
 ```
 
+# Fim da parte 3 
+---
+
+# Início da parte 4
+
+[Link para o código para o início da parte 4](https://github.com/tryber/sd-019-a-live-lectures/blob/mentoria/cs/python-na-web/parte-3/swapi/main.py)
+
+Vale revisar as rotas que foram criadas no arquivo ```main.py```e rodar os testes com o relatório de cobertura.
+
+```shell
+python3 -m pytest --cov-report term-missing --cov=swapi tests/
+```
+
 Uma vez que a rota está criada, podemos fazer alguns testes manuais antes de escrever o teste, para isso, use a rota ```/docs```. Mostre a rota funcionando caso nenhum parâmetro seja passado, caso apenas ```name```seja passado, caso apenas ```gravity```seja passado e caso ambos os parâmetros sejam passados. Com os valores obtidos dessa inspeção manual podemos escrever quatro novas funções de testes no nosso arquivo ```test_main.py```. Veja só:
 
 ```python
