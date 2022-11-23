@@ -496,6 +496,23 @@ Após a implementação é interessante mais uma vez acessar a documentação ge
 
 O próximo passo agora é utilizar essa aplicação no lugar da API original, mostrando que podemos criar nossas próprias APIs e consumí-las, por exemplo, em um front-end REACT. Para começar a fazer isso, antes, é necessário adiconar algumas linhas de código no arquivo ```main.py``` isso para que a aplicação permita que sejam feitas requisições do navegador, especificamente de determinada porta, na qual roda a nossa aplicação REACT.
 
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+
 Feito isso, é necessário ter também o repositório do projeto clonado na máquina [link](https://github.com/tryber/sd-014-a-project-starwars-planets-search) e acessar a branch de uma pessoa estudante que concluiu o projeto, recomenda-se aqui a branch ```jonathan-f-silva-starwars-planets-search```. O comando para chegar a essa branch é:
 
 ```shell
