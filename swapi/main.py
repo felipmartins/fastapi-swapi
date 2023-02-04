@@ -68,20 +68,18 @@ async def search_planets(name: str = None, gravity: str = None):
             planets = session.exec(select(Planet).where(Planet.name == name)).all()
         elif not name and gravity:
             planets = session.exec(select(Planet).where(Planet.gravity == gravity)).all()
-        elif name and gravity:
+        elif name:
             planets = session.exec(select(Planet).where(Planet.name == name).where(Planet.gravity == gravity)).all()
         else:
             planets = session.exec(select(Planet)).all()
-    
+
         return create_response(planets)
 
 
 @app.get("/api/planets/{id}", tags=["planets"], response_model=PlanetRead)
 async def list_planet_by_id(id: int):
     with get_session() as session:
-        planet = session.exec(select(Planet).where(Planet.id == id)).one()
-
-        return planet
+        return session.exec(select(Planet).where(Planet.id == id)).one()
 
 
 @app.get("/api/people/",  tags=["people"])
@@ -105,6 +103,4 @@ async def create_people(people: PeopleCreate):
 @app.get("/api/people/{id}", tags=["people"], response_model=PeopleRead)
 async def list_people_by_id(id: int):
     with get_session() as session:
-        people = session.exec(select(People).where(People.id == id)).one()
-
-        return people
+        return session.exec(select(People).where(People.id == id)).one()
