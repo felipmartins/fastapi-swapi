@@ -1,2 +1,2 @@
-fastapi==0.85.2
+fastapi==0.88.0
 sqlmodel==0.0.8
